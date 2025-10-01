@@ -20,6 +20,6 @@ CREATE TABLE public.schedules (
     rows     integer NOT NULL,
     seats    integer NOT NULL,
     price    double precision NOT NULL,
-    taken    text NOT NULL,
+    taken    text[] NOT NULL DEFAULT '{}',
     "filmId" uuid REFERENCES public.films
 );
