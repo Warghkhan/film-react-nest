@@ -7,34 +7,61 @@ export interface AppConfig {
 }
 
 export interface AppConfigDatabase {
-  driver: string;
-  url: string;
+  driver: 'mongodb' | 'postgres';
+  url?: string; // только для MongoDB
+  // Поля для PostgreSQL (опционально, если нужны вне TypeORM)
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  database?: string;
 }
 
 // Функция для создания конфига
 function createConfig(): AppConfig {
-  const databaseDriver = process.env.DATABASE_DRIVER;
-  const databaseUrl = process.env.DATABASE_URL;
+  const databaseDriver = process.env.DATABASE_DRIVER?.trim();
   const debug = process.env.DEBUG || '*';
 
-  if (!databaseDriver) throw new Error('DATABASE_DRIVER is not set');
-  if (!databaseUrl) throw new Error('DATABASE_URL is not set');
+  if (!databaseDriver) {
+    throw new Error('DATABASE_DRIVER is not set');
+  }
 
-  return {
-    database: {
-      driver: databaseDriver,
-      url: databaseUrl,
-    },
-    debug,
-  };
+  if (databaseDriver === 'mongodb') {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      throw new Error('DATABASE_URL is required for MongoDB');
+    }
+    return {
+      database: {
+        driver: 'mongodb',
+        url: databaseUrl,
+      },
+      debug,
+    };
+  }
+
+  if (databaseDriver === 'postgres') {
+    return {
+      database: {
+        driver: 'postgres',
+        host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT || '5432', 10),
+        username: process.env.DB_USERNAME || 'prac',
+        password: process.env.DB_PASSWORD || 'prac',
+        database: process.env.DB_NAME || 'prac',
+      },
+      debug,
+    };
+  }
+
+  throw new Error(`Unsupported DATABASE_DRIVER: ${databaseDriver}`);
 }
 
-// Провайдер без `imports`!
+// Провайдер для NestJS
+export const CONFIG_PROVIDER = 'CONFIG';
+
 export const configProvider: Provider = {
-  provide: 'CONFIG',
-  useFactory: (): AppConfig => {
-    return createConfig();
-  },
+  provide: CONFIG_PROVIDER,
+  useFactory: createConfig,
 };
 
-export const CONFIG_PROVIDER = 'CONFIG';

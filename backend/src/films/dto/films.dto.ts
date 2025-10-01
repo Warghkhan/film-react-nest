@@ -1,3 +1,5 @@
+import { ScheduleDto } from "./schedule.dto";
+
 //TODO описать DTO для запросов к /films
 export class FilmDto {
   id: string;
