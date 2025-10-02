@@ -19,7 +19,7 @@ export class Film {
   tags: string[];
 
   @Prop()
-  image: string; // например: "/bg1s.jpg"
+  image: string;
 
   @Prop()
   cover: string;

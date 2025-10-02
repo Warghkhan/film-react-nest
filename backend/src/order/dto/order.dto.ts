@@ -1,4 +1,3 @@
-//TODO реализовать DTO для /orders
 export class OrderItemDto {
   film: string;
   session: string;

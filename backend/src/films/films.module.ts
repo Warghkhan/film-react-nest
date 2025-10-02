@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { FilmsController } from './films.controller';
 import { FilmsService } from './films.service';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -10,19 +10,45 @@ import { Schedule as ScheduleEntity } from '../films/entities/schedule.entity';
 import { MongodbFilmsRepository } from 'src/repository/mongodb.films.repository';
 import { TypeOrmFilmsRepository } from 'src/repository/typeorm.films.repository';
 
-@Module({
-  imports: [
-    MongooseModule.forFeature([
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import { FilmsRepository } from 'src/repository/films.repository.interface';
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+const databaseDriver = process.env.DATABASE_DRIVER;
+
+let dbFeatureModule: DynamicModule;
+let filmsRepositoryProvider: Provider<FilmsRepository>;
+
+switch (databaseDriver) {
+  case 'mongodb':
+    dbFeatureModule = MongooseModule.forFeature([
       { name: Film.name, schema: FilmSchema },
       { name: Schedule.name, schema: ScheduleSchema },
-    ]),
-    TypeOrmModule.forFeature([FilmEntity, ScheduleEntity]),
-  ],
+    ]);
+    filmsRepositoryProvider = {
+      provide: 'FilmsRepository',
+      useClass: MongodbFilmsRepository,
+    };
+    break;
+
+  case 'postgres':
+    dbFeatureModule = TypeOrmModule.forFeature([FilmEntity, ScheduleEntity]);
+    filmsRepositoryProvider = {
+      provide: 'FilmsRepository',
+      useClass: TypeOrmFilmsRepository,
+    };
+    break;
+
+  default:
+    throw new Error(
+      `Unsupported DATABASE_DRIVER: "${databaseDriver}". Supported: "mongodb", "postgres".`,
+    );
+}
+
+@Module({
+  imports: [dbFeatureModule],
   controllers: [FilmsController],
-  providers: [
-    FilmsService,
-    MongodbFilmsRepository,
-    TypeOrmFilmsRepository,
-  ],
+  providers: [FilmsService, filmsRepositoryProvider],
 })
 export class FilmsModule {}

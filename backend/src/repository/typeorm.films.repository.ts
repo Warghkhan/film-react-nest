@@ -7,7 +7,6 @@ import { FilmDto } from '../films/dto/films.dto';
 import { Schedule } from 'src/films/entities/schedule.entity';
 import { ScheduleDto } from 'src/films/dto/schedule.dto';
 
-
 @Injectable()
 export class TypeOrmFilmsRepository implements FilmsRepository {
   constructor(
@@ -19,7 +18,7 @@ export class TypeOrmFilmsRepository implements FilmsRepository {
 
   async findAll(): Promise<FilmDto[]> {
     const films = await this.filmRepository.find();
-    return films.map(f => this.mapFilmToDto(f));
+    return films.map((f) => this.mapFilmToDto(f));
   }
 
   async findById(id: string): Promise<FilmDto | null> {
@@ -28,12 +27,13 @@ export class TypeOrmFilmsRepository implements FilmsRepository {
   }
 
   async findScheduleByFilmId(id: string): Promise<ScheduleDto[]> {
-    // Проверяем, существует ли фильм
     const filmExists = await this.filmRepository.exist({ where: { id } });
     if (!filmExists) return [];
 
-    const schedules = await this.scheduleRepository.find({ where: { film: { id } } });
-    return schedules.map(s => ({
+    const schedules = await this.scheduleRepository.find({
+      where: { film: { id } },
+    });
+    return schedules.map((s) => ({
       id: s.id,
       daytime: s.daytime,
       hall: s.hall,

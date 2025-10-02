@@ -12,7 +12,7 @@ export class MongodbFilmsRepository implements FilmsRepository {
 
   async findAll(): Promise<FilmDto[]> {
     const films = await this.filmModel.find().exec();
-    return films.map(f => this.mapFilmToDto(f));
+    return films.map((f) => this.mapFilmToDto(f));
   }
 
   async findById(id: string): Promise<FilmDto | null> {
@@ -23,10 +23,10 @@ export class MongodbFilmsRepository implements FilmsRepository {
   async findScheduleByFilmId(id: string): Promise<ScheduleDto[]> {
     const film = await this.filmModel.findOne({ id }, 'schedule').exec();
     if (!film || !film.schedule) return [];
-    return film.schedule.map(s => ({
+    return film.schedule.map((s) => ({
       id: s.id,
       daytime: s.daytime,
-      hall: s.hall,        // number
+      hall: s.hall,
       rows: s.rows,
       seats: s.seats,
       price: s.price,
