@@ -1,6 +1,6 @@
 services:
   database:
-    image: postgres:16.4
+    image: postgres:18
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -60,7 +60,7 @@ services:
     networks:
       - internal
   server:
-    image: "ghcr.io/warghkhan/film-server:latest"
+    image: "ghcr.io/warghkhan/film-nginx:latest"
     build:
       context: nginx
     ports:
