@@ -1,12 +1,7 @@
-FROM node:20-alpine AS builder
-
+FROM node:20-alpine AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --silent
-
+RUN npm install
+RUN npm install --save-dev @rollup/rollup-linux-x64-musl
 COPY . .
 RUN npm run build
-
-# Только статика
-FROM scratch AS production
-COPY --from=builder /app/build /build

@@ -1,80 +1,86 @@
-version: '3.8'
-
 services:
-  postgres:
-    image: postgres:18
-    restart: always
+  database:
+    image: postgres:16.4
     environment:
-      POSTGRES_USER: prac
-      POSTGRES_PASSWORD: prac
-      POSTGRES_DB: prac
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
+      - ./backend/test/docker-entrypoint-initdb.d:/backend/test/docker-entrypoint-initdb.d
+    ports:
+      - '5432:5432'
     networks:
-      - app-network
+      - internal
 
   pgadmin:
     image: dpage/pgadmin4
+    container_name: pgadmin4_container
     restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
     ports:
-      - "8080:80"
+      - '8080:80'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - pgadmin-data:/var/lib/pgadmin
     networks:
-      - app-network
+      - internal
+  
+  frontend:
+    image: 'ghcr.io/warghkhan/film-frontend:latest'
+    build:
+      context: frontend
+    environment:
+      VITE_BASE_URL: /
+      VITE_API_URL: /api/afisha
+      VITE_CDN_URL: /content/afisha
+    volumes:
+      - frontend_build:/app/dist
 
   backend:
+    image: 'ghcr.io/warghkhan/film-backend:latest'
     build:
-      context: ./backend
+      context: backend
       dockerfile: Dockerfile
-    image: ghcr.io/warghkhan/film-backend:latest
-    restart: always
     environment:
-      DATABASE_DRIVER: postgres
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USERNAME: prac
-      DB_PASSWORD: prac
-      DB_NAME: prac
-      LOGGER_TYPE: json
-    depends_on:
-      - postgres
-    networks:
-      - app-network
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    image: ghcr.io/warghkhan/film-frontend:latest
-    volumes:
-      - frontend_build:/build
-    networks:
-      - app-network
-
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    image: ghcr.io/warghkhan/film-nginx:latest
+      DB_HOST: database 
+      DB_PORT: ${DB_PORT}
+      DEBUG: '*'
+      DATABASE_DRIVER: 'postgres'
+      DATABASE_URL: 'postgres://database:5432/${POSTGRES_DB}'
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "80:80"
-    volumes:
-      - frontend_build:/usr/share/nginx/html:ro
+      - 3000:3000
     depends_on:
-      - backend
-      - frontend
+      - database
     networks:
-      - app-network
+      - internal
+  server:
+    image: 'ghcr.io/warghkhan/film-server:latest'
+    build: 
+      context: nginx
+    ports:
+      - 80:80
+    volumes:
+      - frontend_build:/var/www
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - internal
+
 
 volumes:
-  postgres_data:
-  pgadmin_data:
+  db_data:
+  pgadmin-data:
   frontend_build:
 
 networks:
-  app-network:
-    driver: bridge
+ internal:
+
+
+
+
+  

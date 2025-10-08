@@ -34,7 +34,7 @@ if (databaseDriver === 'mongodb') {
       password: config.get('DB_PASSWORD'),
       database: config.get('DB_NAME'),
       entities: [Film, Schedule],
-      synchronize: false,
+      synchronize: true,
       logging: config.get('DEBUG', false) ? ['query', 'error'] : false,
     }),
     inject: [ConfigService],
