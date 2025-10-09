@@ -8,7 +8,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });
-  const loggerType = process.env.LOGGER_TYPE?.trim().toLowerCase()|| 'dev';
+  const loggerType = process.env.LOGGER_TYPE?.trim().toLowerCase() || 'dev';
 
   app.useLogger(createLogger(loggerType));
 
